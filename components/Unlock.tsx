@@ -19,62 +19,68 @@ export default function Unlock() {
     setLoading(true);
     setState(1);
 
-    const blockchainProvider = new KoiosProvider("preprod");
+    try {
+      const blockchainProvider = new KoiosProvider("preprod");
 
-    // load script
-    const script: PlutusScript = {
-      code: scriptCbor,
-      version: "V2",
-    };
-    const scriptAddress = resolvePlutusScriptAddress(script, 0);
-
-    // datum
-    const address = (await wallet.getUsedAddresses())[0];
-    const walletKeyhash = resolvePaymentKeyHash(address);
-    const dataHash = resolveDataHash(walletKeyhash);
-
-    // get UTXO from script
-    const utxos = await blockchainProvider.fetchAddressUTxOs(
-      scriptAddress,
-      "lovelace"
-    );
-
-    let utxo = utxos.find((utxo: any) => {
-      return utxo.output.dataHash == dataHash;
-    });
-
-    if (utxo) {
-      // redeemer
-      const redeemer = {
-        data: "join emurgo hackathon",
+      // load script
+      const script: PlutusScript = {
+        code: scriptCbor,
+        version: "V2",
       };
+      const scriptAddress = resolvePlutusScriptAddress(script, 0);
 
-      // transaction
-      const tx = new Transaction({ initiator: wallet })
-        .redeemValue({
-          value: utxo,
-          script: script,
-          datum: utxo,
-          redeemer: redeemer,
-        })
-        .sendValue(address, utxo)
-        .setRequiredSigners([address]);
+      // datum
+      const address = (await wallet.getUsedAddresses())[0];
+      const walletKeyhash = resolvePaymentKeyHash(address);
+      const dataHash = resolveDataHash(walletKeyhash);
 
-      const unsignedTx = await tx.build();
-      const signedTx = await wallet.signTx(unsignedTx, true);
-      const txHash = await wallet.submitTx(signedTx);
+      // get UTXO from script
+      const utxos = await blockchainProvider.fetchAddressUTxOs(
+        scriptAddress,
+        "lovelace"
+      );
 
-      setLoading(false);
-
-      // onTxConfirmed
-      setState(2);
-      blockchainProvider.onTxConfirmed(txHash, () => {
-        setState(3);
-        console.log("Transaction confirmed");
+      let utxo = utxos.find((utxo: any) => {
+        return utxo.output.dataHash == dataHash;
       });
-    } else {
+
+      if (utxo) {
+        // redeemer
+        const redeemer = {
+          data: "join emurgo hackathon",
+        };
+
+        // transaction
+        const tx = new Transaction({ initiator: wallet })
+          .redeemValue({
+            value: utxo,
+            script: script,
+            datum: utxo,
+            redeemer: redeemer,
+          })
+          .sendValue(address, utxo)
+          .setRequiredSigners([address]);
+
+        const unsignedTx = await tx.build();
+        const signedTx = await wallet.signTx(unsignedTx, true);
+        const txHash = await wallet.submitTx(signedTx);
+
+        setLoading(false);
+
+        // onTxConfirmed
+        setState(2);
+        blockchainProvider.onTxConfirmed(txHash, () => {
+          setState(3);
+          console.log("Transaction confirmed");
+        });
+      } else {
+        setLoading(false);
+        setState(0);
+      }
+    } catch (e) {
       setLoading(false);
       setState(0);
+      console.error(e);
     }
   }
 

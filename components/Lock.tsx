@@ -18,44 +18,50 @@ export default function Lock() {
     setLoading(true);
     setState(1);
 
-    const blockchainProvider = new KoiosProvider("preprod");
+    try {
+      const blockchainProvider = new KoiosProvider("preprod");
 
-    // load script
-    const script: PlutusScript = {
-      code: scriptCbor,
-      version: "V2",
-    };
-    const scriptAddress = resolvePlutusScriptAddress(script, 0);
+      // load script
+      const script: PlutusScript = {
+        code: scriptCbor,
+        version: "V2",
+      };
+      const scriptAddress = resolvePlutusScriptAddress(script, 0);
 
-    // prepare walletKeyhash for datum
-    const address = (await wallet.getUsedAddresses())[0];
-    const walletKeyhash = resolvePaymentKeyHash(address);
+      // prepare walletKeyhash for datum
+      const address = (await wallet.getUsedAddresses())[0];
+      const walletKeyhash = resolvePaymentKeyHash(address);
 
-    // transaction
-    const tx = new Transaction({ initiator: wallet }).sendLovelace(
-      {
-        address: scriptAddress,
-        datum: {
-          value: walletKeyhash,
-          inline: true,
+      // transaction
+      const tx = new Transaction({ initiator: wallet }).sendLovelace(
+        {
+          address: scriptAddress,
+          datum: {
+            value: walletKeyhash,
+            inline: true,
+          },
         },
-      },
-      "2000000"
-    );
+        "2000000"
+      );
 
-    const unsignedTx = await tx.build();
-    const signedTx = await wallet.signTx(unsignedTx);
-    const txHash = await wallet.submitTx(signedTx);
-    console.log(txHash);
+      const unsignedTx = await tx.build();
+      const signedTx = await wallet.signTx(unsignedTx);
+      const txHash = await wallet.submitTx(signedTx);
+      console.log(txHash);
 
-    setLoading(false);
+      setLoading(false);
 
-    // onTxConfirmed
-    setState(2);
-    blockchainProvider.onTxConfirmed(txHash, () => {
-      setState(3);
-      console.log("Transaction confirmed");
-    });
+      // onTxConfirmed
+      setState(2);
+      blockchainProvider.onTxConfirmed(txHash, () => {
+        setState(3);
+        console.log("Transaction confirmed");
+      });
+    } catch (e) {
+      setLoading(false);
+      setState(0);
+      console.error(e);
+    }
   }
 
   return (
