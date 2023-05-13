@@ -51,3 +51,8 @@ Transaction - redeem assets from script:
 - use blockchain provider to `fetchAddressUTxOs()` to get the utxos from the script address
 - create redeemer
 - create transaction, redeeming the utxos from the script address
+
+Deployment
+- commit codes to GitHub
+- log in / sign up Vercel
+- deploy to Vercel
