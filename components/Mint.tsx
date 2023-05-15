@@ -62,7 +62,8 @@ export default function Mint() {
       const unsignedTx = await tx.build();
 
       const signedTx = await wallet.signTx(
-        await appWallet.signTx(unsignedTx, true),
+        await appWallet.signTx(unsignedTx, true), // sign with app wallet
+        true // sign with  browser wallet
       );
 
       const txHash = await wallet.submitTx(signedTx);
