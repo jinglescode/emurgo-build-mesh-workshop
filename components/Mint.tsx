@@ -60,9 +60,12 @@ export default function Mint() {
       );
 
       const unsignedTx = await tx.build();
-      const signedTx = await wallet.signTx(unsignedTx);
+
+      const signedTx = await wallet.signTx(
+        await appWallet.signTx(unsignedTx, true),
+      );
+
       const txHash = await wallet.submitTx(signedTx);
-      console.log(txHash);
 
       setLoading(false);
 
